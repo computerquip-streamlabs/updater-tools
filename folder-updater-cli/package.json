@@ -1,0 +1,10 @@
+{
+    "name": "folder-updater-cli",
+    "license": "BSD-3-Clause",
+    "version": "1.0.0",
+    "bin": "cli.js",
+    "dependencies": {
+        "minimist": "^1.2.0",
+        "folder-updater": "^1.0.1"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "fl-downloader-cli",
+    "license": "BSD-3-Clause",
+    "version": "1.0.0",
+    "bin": "cli.js",
+    "dependencies": {
+        "fl-downloader": "^1.0.0",
+        "minimist": "^1.2.0"
+    }
+}

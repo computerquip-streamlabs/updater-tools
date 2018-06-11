@@ -1,0 +1,10 @@
+{
+    "name": "fl-differ-cli",
+    "license": "BSD-3-Clause",
+    "version": "1.0.1",
+    "bin": "cli.js",
+    "dependencies": {
+        "fl-differ": "1.0.0",
+        "minimist": "^1.2.0"
+    }
+}

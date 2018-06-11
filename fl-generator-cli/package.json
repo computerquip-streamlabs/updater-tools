@@ -1,0 +1,10 @@
+{
+    "name": "fl-generator-cli",
+    "license": "BSD-3-Clause",
+    "version": "1.0.0",
+    "bin": "cli.js",
+    "dependencies": {
+        "fl-generator": "^1.0.0",
+        "minimist": "^1.2.0"
+    }
+}
