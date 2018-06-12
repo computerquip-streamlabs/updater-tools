@@ -101,10 +101,13 @@ async function file_list_cmp(file_list, new_folder, hash_algo) {
 }
 
 /*
- * @param newFolder The folder to move/copy from.
- * @param oldFolder The folder to move/copy to.
+ * @param new_folder The folder to move/copy from.
+ * @param old_folder The folder to move/copy to.
+ * @param file_list List describing how and what to copy.
+ * @todo We need a better method of error handling other
+ *       than just returning false.
  */
-async function updateFolder(new_folder, old_folder, options) {
+async function updateFolder(new_folder, old_folder, file_list, options) {
     const cwd = path.resolve();
 
     const context = {
@@ -116,30 +119,23 @@ async function updateFolder(new_folder, old_folder, options) {
         options['hash-algo'] = 'sha1';
     }
 
-    /* If a file list is given, make a file-list of the current
-     * directory to make sure the new files match the list. */
-    if (!options['file-list-bypass'] && options['file-list']) {
-        const list_filepath = path.resolve(options['file-list']);
-        const file_list = JSON.parse(await readFile(list_filepath));
+    let success =
+        await file_list_cmp(
+            file_list,
+            context.new_folder,
+            options['hash-algo']
+        );
 
-        let success =
-            await file_list_cmp(
-                file_list,
-                context.new_folder,
-                options['hash-algo']
-            );
+    if (!success) return false;
 
-        if (!success) return;
+    success =
+        await handle_filelist_file_copy(
+            file_list,
+            context.new_folder,
+            context.old_folder
+        );
 
-        success =
-            await handle_filelist_file_copy(
-                file_list,
-                context.new_folder,
-                context.old_folder
-            );
-
-        if (!success) return;
-    }
+    if (!success) return false;
 }
 
 module.exports = {
