@@ -21,7 +21,7 @@ function print_help() {
     const cwd = path.resolve();
     const node_name = process.argv[0];
     const script_name = path.relative(cwd, process.argv[1]);
-    console.log(`Usage: "${node_name}" "${script_name}" [options] <old_folder> <new_folder>`);
+    console.log(`Usage: "${node_name}" "${script_name}" [options] <old_folder> <new_folder> <file_list>`);
 }
 
 if (args['debug'])
@@ -39,16 +39,9 @@ if (args._.length > 2) {
     return;
 }
 
-if (!args['file-list'] && !args['file-list-bypass']) {
-    console.log('file-list option is required by default');
-    return;
-}
-
-if (args['file-list-bypass'] && args['file-list']) {
-    console.log('file-list-bypass and file-list conflict');
-    return;
-}
-
 const options = { ...args }
 
-updater.updateFolder(args._[0], args._[1], options);
+const cwd = path.resolve();
+const file_list = JSON.parse(fs.readFileSync(path.resolve(cwd, args._[2])));
+
+updater.updateFolder(args._[0], args._[1], file_list, options);
