@@ -101,14 +101,16 @@ async function generateFileList(folder_path, options, callback) {
      * machine. */
     const root_folder_path = path.resolve(cwd, folder_path);
 
-    if (!options['hash-algo'])
-        options['hash-algo'] = 'sha1';
+    if (!options) options = { };
+
+    if (!options['hashAlgo'])
+        options['hashAlgo'] = 'sha1';
 
     const context = {
         callback,
         root_folder_path,
-        hash_algo: options['hash-algo']
-    }
+        hash_algo: options['hashAlgo']
+    };
 
     const files = await readdir(root_folder_path);
     await handle_folder_read(files, root_folder_path, context);
