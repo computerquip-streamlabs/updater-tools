@@ -1,15 +1,13 @@
 #! /usr/bin/env node
-const updater = require('folder-updater');
+const updater = require('fl-folder-updater');
 const path = require('path');
 const fs = require('fs');
 
 const minimist_options = {
     string: [
-        'file-list',
         'hash-algo'
     ],
     boolean: [
-        'file-list-bypass',
         'debug'
     ],
     stopEarly: true

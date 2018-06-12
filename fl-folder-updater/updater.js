@@ -70,7 +70,13 @@ async function handle_filelist_file_copy(file_list, new_folder, old_folder) {
 }
 
 async function file_list_cmp(file_list, new_folder, hash_algo) {
-    const new_file_list = await flg.generateFileList(hash_algo, new_folder);
+    let file_list = { };
+
+    await flg.generateFileList(new_folder, {
+        hashAlgo: hash_algo
+    }, (key, value) => {
+        file_list[key] = value;
+    });
 
     for (const file in file_list) {
         /* Make sure each entry in the new file list (which represents
@@ -115,7 +121,7 @@ async function updateFolder(new_folder, old_folder, file_list, options) {
         old_folder: path.resolve(cwd, old_folder)
     };
 
-    if (!options['hash-algo']) {
+    if (options && !options['hash-algo']) {
         options['hash-algo'] = 'sha1';
     }
 

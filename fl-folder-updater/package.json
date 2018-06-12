@@ -1,7 +1,7 @@
 {
-    "name": "folder-updater",
+    "name": "fl-folder-updater",
     "license": "BSD-3-Clause",
-    "version": "1.0.2",
+    "version": "1.0.0",
     "main": "updater.js",
     "dependencies": {
         "fl-generator": "1.0.0"
