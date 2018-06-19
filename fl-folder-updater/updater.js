@@ -167,6 +167,4 @@ async function updateFolder(to_folder, from_folder, file_list, options) {
     if (!success) return false;
 }
 
-module.exports = {
-    updateFolder
-}
+module.exports = updateFolder;
