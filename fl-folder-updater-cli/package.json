@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "bin": "cli.js",
     "dependencies": {
-        "fl-folder-updater": "^1.0.0",
+        "fl-folder-updater": "1.0.2",
         "minimist": "^1.2.0"
     }
 }

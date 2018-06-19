@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-const updater = require('fl-folder-updater');
+const update = require('fl-folder-updater');
 const path = require('path');
 const fs = require('fs');
 
@@ -42,4 +42,4 @@ const options = { ...args }
 const cwd = path.resolve();
 const file_list = JSON.parse(fs.readFileSync(path.resolve(cwd, args._[2])));
 
-updater.updateFolder(args._[0], args._[1], file_list, options);
+update(args._[0], args._[1], file_list, options);
