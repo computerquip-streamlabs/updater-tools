@@ -5,10 +5,9 @@ const flg = require('fl-generator');
 
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
-const readdir = util.promisify(fs.readdir);
-const lstat = util.promisify(fs.lstat);
 const unlink = util.promisify(fs.unlink);
 const mkdir = util.promisify(fs.mkdir);
+const lstat = util.promisify(fs.lstat);
 
 async function mkdir_maybe(directory) {
     try {
@@ -39,7 +38,7 @@ async function ensure_path(filepath) {
     }
 }
 
-async function handle_filelist_file_copy(file_list, new_folder, old_folder) {
+async function handle_filelist_file_copy(file_list, from_folder, to_folder) {
     /* When copying with a file list, we have a few things
      * to take into consideration.
      *
@@ -56,8 +55,8 @@ async function handle_filelist_file_copy(file_list, new_folder, old_folder) {
      * If the file list specifies a file in a directory that
      * doesn't exist, the directory is created.*/
     for (const file in file_list) {
-        const filepath = path.resolve(old_folder, file);
-        const file_to_copy = path.resolve(new_folder, file);
+        const filepath = path.resolve(to_folder, file);
+        const file_to_copy = path.resolve(from_folder, file);
 
         if (file_list[file] === null) {
             await delete_file_maybe(filepath);
@@ -69,34 +68,57 @@ async function handle_filelist_file_copy(file_list, new_folder, old_folder) {
     }
 }
 
-async function file_list_cmp(file_list, new_folder, hash_algo) {
-    let file_list = { };
+async function file_list_cmp(assumed_list, from_folder, hashAlgo) {
+    /* Actual list here is used to account for
+     * what files are actually in from_folder
+     * rather than assuming the list that was
+     * given to us is correct. */
+    let actual_list = { };
 
-    await flg.generateFileList(new_folder, {
-        hashAlgo: hash_algo
-    }, (key, value) => {
-        file_list[key] = value;
-    });
+    /* generateFileList wants an existing folder and will throw otherwise.
+     * I think this is sane behavior since you generally don't want a file
+     * list for something that doesn't exist. */
+    let from_exists = false;
+    try {
+        const from_stat = await lstat(from_folder);
 
-    for (const file in file_list) {
-        /* Make sure each entry in the new file list (which represents
+        if (!from_stat.isDirectory()) {
+            throw Error(`${from_folder} isn't a directory!`);
+        }
+
+        from_exists = true;
+    } catch(error) {
+        if (error.code !== 'ENOENT') {
+            throw error;
+        }
+    }
+
+    if (from_exists) {
+        const list_func = (key, value) => { actual_list[key] = value; }
+        await flg.generateFileList(from_folder, { hashAlgo }, list_func);
+    }
+
+    for (const file in assumed_list) {
+        if (assumed_list[file] === null) continue;
+
+        /* Make sure each entry in the actual file list (which represents
          * the directory we're copying from) has an entry corresponding
          * to the file list given. This makes sure the file actually
          * exists. */
-        if (file_list[file] === null) continue;
+        if (!actual_list.hasOwnProperty(file)) {
+            const file_list_path = path.resolve(from_folder, file);
 
-        if (!new_file_list.hasOwnProperty(file)) {
             console.log(`File list specifies ${file} ` +
-                        `but wasn't found in ${file_list_path}`)
+                        `but wasn't found in ${file_list_path}`);
             return false;
         }
 
         /* We now know that each file list has an entry with the
          * same key. We can now fetch the checksum to make sure
          * they're they same file. */
-        if (file_list[file] !== new_file_list[file]) {
-            console.log(`File list specified checksum ${file_list[file]} but ` +
-                        `file checksum is ${new_file_list[file]}. Make sure ` +
+        if (assumed_list[file] !== actual_list[file]) {
+            console.log(`File list specified checksum ${assumed_list[file]} but ` +
+                        `file checksum is ${actual_list[file]}. Make sure ` +
                         `the same algorithm is used and the checksum given ` +
                         `in the file list is correct.`);
             return false;
@@ -107,29 +129,30 @@ async function file_list_cmp(file_list, new_folder, hash_algo) {
 }
 
 /*
- * @param new_folder The folder to move/copy from.
- * @param old_folder The folder to move/copy to.
+ * @param to_folder The folder to move/copy from.
+ * @param from_folder The folder to move/copy to.
  * @param file_list List describing how and what to copy.
  * @todo We need a better method of error handling other
  *       than just returning false.
  */
-async function updateFolder(new_folder, old_folder, file_list, options) {
+async function updateFolder(to_folder, from_folder, file_list, options) {
     const cwd = path.resolve();
 
     const context = {
-        new_folder: path.resolve(cwd, new_folder),
-        old_folder: path.resolve(cwd, old_folder)
+        to_folder: path.resolve(cwd, to_folder),
+        from_folder: path.resolve(cwd, from_folder)
     };
 
-    if (options && !options['hash-algo']) {
-        options['hash-algo'] = 'sha1';
+    if (options && !options['hashAlgo']) {
+        options['hashAlgo'] = 'sha1';
     }
 
+    /* Check our temporary files for correctness. */
     let success =
         await file_list_cmp(
             file_list,
-            context.new_folder,
-            options['hash-algo']
+            context.from_folder,
+            options['hashAlgo']
         );
 
     if (!success) return false;
@@ -137,8 +160,8 @@ async function updateFolder(new_folder, old_folder, file_list, options) {
     success =
         await handle_filelist_file_copy(
             file_list,
-            context.new_folder,
-            context.old_folder
+            context.from_folder,
+            context.to_folder
         );
 
     if (!success) return false;

@@ -4,6 +4,6 @@
     "version": "1.0.0",
     "main": "updater.js",
     "dependencies": {
-        "fl-generator": "1.0.0"
+        "fl-generator": "1.0.1"
     }
 }
