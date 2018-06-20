@@ -5,3 +5,7 @@
 fl-generator@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/fl-generator/-/fl-generator-1.0.1.tgz#782d2bcaed31319d63a309262f058eea533ba902"
+
+p-map@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/p-map/-/p-map-1.2.0.tgz#e4e94f311eabbc8633a1e79908165fca26241b6b"
