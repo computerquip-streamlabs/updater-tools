@@ -4,6 +4,8 @@
     "version": "1.0.0",
     "main": "downloader.js",
     "dependencies": {
-        "axios": "0.18.0"
+        "axios": "0.18.0",
+        "slash": "2.0.0",
+        "p-map": "1.2.0"
     }
 }
