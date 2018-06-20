@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const flg = require('fl-generator');
+const fl_generate = require('fl-generator');
+const pmap = require('p-map');
 
-const writeFile = util.promisify(fs.writeFile);
-const readFile = util.promisify(fs.readFile);
+const rename = util.promisify(fs.rename);
 const unlink = util.promisify(fs.unlink);
 const mkdir = util.promisify(fs.mkdir);
 const lstat = util.promisify(fs.lstat);
@@ -54,18 +54,35 @@ async function handle_filelist_file_copy(file_list, from_folder, to_folder) {
      *
      * If the file list specifies a file in a directory that
      * doesn't exist, the directory is created.*/
-    for (const file in file_list) {
-        const filepath = path.resolve(to_folder, file);
-        const file_to_copy = path.resolve(from_folder, file);
+    let delete_list = [];
+    let update_list = [];
 
+    for (const file in file_list) {
         if (file_list[file] === null) {
-            await delete_file_maybe(filepath);
+            delete_list.push(file);
             continue;
         }
 
-        await ensure_path(filepath);
-        await writeFile(filepath, await readFile(file_to_copy));
+        update_list.push(file);
     }
+
+    const delete_promise = pmap(delete_list, (file) => {
+        const filepath = path.resolve(to_folder, file);
+        return delete_file_maybe(filepath);
+    }, { concurrency: 5 });
+
+    const update_promise = pmap(update_list, (file) => {
+        const filepath = path.resolve(to_folder, file);
+        const file_to_copy = path.resolve(from_folder, file);
+
+        return ensure_path(filepath).then(() => {
+            return rename(file_to_copy, filepath);
+        });
+    }, { concurrency: 5 });
+
+    await Promise.all([delete_promise, update_promise]);
+
+    return true;
 }
 
 async function file_list_cmp(assumed_list, from_folder, hashAlgo) {
@@ -95,7 +112,7 @@ async function file_list_cmp(assumed_list, from_folder, hashAlgo) {
 
     if (from_exists) {
         const list_func = (key, value) => { actual_list[key] = value; }
-        await flg.generateFileList(from_folder, { hashAlgo }, list_func);
+        await fl_generate(from_folder, { hashAlgo }, list_func);
     }
 
     for (const file in assumed_list) {
@@ -120,7 +137,7 @@ async function file_list_cmp(assumed_list, from_folder, hashAlgo) {
             console.log(`File list specified checksum ${assumed_list[file]} but ` +
                         `file checksum is ${actual_list[file]}. Make sure ` +
                         `the same algorithm is used and the checksum given ` +
-                        `in the file list is correct.`);
+                        `in the file list is correct. Trouble key is ${file}`);
             return false;
         }
     }
@@ -135,7 +152,7 @@ async function file_list_cmp(assumed_list, from_folder, hashAlgo) {
  * @todo We need a better method of error handling other
  *       than just returning false.
  */
-async function updateFolder(to_folder, from_folder, file_list, options) {
+async function update_folder(to_folder, from_folder, file_list, options) {
     const cwd = path.resolve();
 
     const context = {
@@ -148,23 +165,21 @@ async function updateFolder(to_folder, from_folder, file_list, options) {
     }
 
     /* Check our temporary files for correctness. */
-    let success =
-        await file_list_cmp(
-            file_list,
-            context.from_folder,
-            options['hashAlgo']
-        );
+    let success = await file_list_cmp(
+        file_list,
+        context.from_folder,
+        options['hashAlgo']
+    );
 
-    if (!success) return false;
+    if (!success) return success;
 
-    success =
-        await handle_filelist_file_copy(
-            file_list,
-            context.from_folder,
-            context.to_folder
-        );
+    success = await handle_filelist_file_copy(
+        file_list,
+        context.from_folder,
+        context.to_folder
+    );
 
-    if (!success) return false;
+    return success;
 }
 
-module.exports = updateFolder;
+module.exports = update_folder;

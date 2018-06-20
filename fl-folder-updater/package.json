@@ -4,6 +4,7 @@
     "version": "1.0.2",
     "main": "updater.js",
     "dependencies": {
-        "fl-generator": "1.0.1"
+        "fl-generator": "1.0.1",
+        "p-map": "1.2.0"
     }
 }
