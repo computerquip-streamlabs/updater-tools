@@ -1,7 +1,7 @@
 {
     "name": "fl-downloader",
     "license": "BSD-3-Clause",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "main": "downloader.js",
     "dependencies": {
         "axios": "0.18.0",
