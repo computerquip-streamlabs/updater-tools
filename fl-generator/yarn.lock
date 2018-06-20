@@ -2,3 +2,6 @@
 # yarn lockfile v1
 
 
+p-map@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/p-map/-/p-map-1.2.0.tgz#e4e94f311eabbc8633a1e79908165fca26241b6b"
