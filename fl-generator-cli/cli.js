@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const generator = require('fl-generator');
+const generate = require('fl-generator');
 const args = require('minimist')(process.argv.slice(2));
 const path = require('path');
 const fs = require('fs');
@@ -25,7 +25,7 @@ const options = { ...args }
 const result = { }
 const callback = (key, value) => { result[key] = value; }
 
-generator.generateFileList(args._[0], options, callback)
+generate(args._[0], options, callback)
     .then(async () => {
         const cwd = path.resolve();
         const file_path = path.resolve(cwd, args._[1]);
