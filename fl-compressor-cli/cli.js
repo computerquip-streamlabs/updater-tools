@@ -4,7 +4,6 @@ const compressor = require('fl-compressor');
 const args = require('minimist')(process.argv.slice(2));
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
 
 function print_help() {
     const cwd = path.resolve();
@@ -23,4 +22,4 @@ const cwd = path.resolve();
 
 const file_list = JSON.parse(fs.readFileSync(path.resolve(cwd, args._[2])));
 
-compressor.compressFiles(args._[0], args._[1], file_list, options);
+compressor(args._[0], args._[1], file_list, options);
