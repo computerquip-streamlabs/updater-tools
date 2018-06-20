@@ -10,7 +10,7 @@
  * a patch that goes from the first parameter to the second
  * parameter.
  */
-function generateDiffList(file_list, new_file_list, options, callback) {
+function generate_diff_list(file_list, new_file_list, options, callback) {
     for (const file in new_file_list) {
         const add_file =
             !file_list.hasOwnProperty(file) ||
@@ -29,6 +29,4 @@ function generateDiffList(file_list, new_file_list, options, callback) {
     }
 }
 
-module.exports = {
-    generateDiffList
-}
+module.exports = generate_diff_list;
