@@ -2,13 +2,14 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
+const pmap = require('p-map');
 
 const readdir = util.promisify(fs.readdir);
 const lstat = util.promisify(fs.lstat);
 
-function add_hash_entry(hash, file_path, context) {
+function add_hash_entry(digest, file_path, context) {
     const file_entry = path.relative(context.root_folder_path, file_path);
-    context.callback(file_entry, hash);
+    context.callback(file_entry, digest);
 }
 
 async function handle_file_lstat(stats, file_path, context) {
@@ -24,7 +25,7 @@ async function handle_file_lstat(stats, file_path, context) {
     }
 
     /* Hash the file for later comparison. This is the value of the key. */
-    const hash = await new Promise((resolve, reject) => {
+    const digest = await new Promise((resolve, reject) => {
         const file_stream = fs.createReadStream(file_path);
         const hash = crypto.createHash(context.hash_algo);
 
@@ -40,29 +41,17 @@ async function handle_file_lstat(stats, file_path, context) {
 
     });
 
-    add_hash_entry(hash, file_path, context);
+    add_hash_entry(digest, file_path, context);
 }
 
 async function handle_folder_read(files, folder_path, context) {
-    /* Once upon a time, I was clever and put each stat promise
-       into an array and then waited on them as a collection.
-       Unfortunately, node doesn't handle opening a lot of files
-       very well. Using graceful-fs works in this case but since
-       this tool must be run on the client side, and I can't
-       guarantee what type of hardware the client has, I don't
-       necessarily want fast but stable.
+    return pmap(files, (file) => {
+        const file_path = path.resolve(folder_path, file);
 
-       However, if you're using this for a server for whatever
-       reason and you want it to scale, simply change out fs with
-       graceful-fs, queue each promise into an array and call
-       Promise.all instead of waiting on them individually. */
-
-    for (let i = 0; i < files.length; ++i) {
-        const file_path = path.resolve(folder_path, files[i]);
-
-        const stats = await lstat(file_path);
-        await handle_file_lstat(stats, file_path, context);
-    }
+        return lstat(file_path).then((stats) => {
+            return handle_file_lstat(stats, file_path, context);
+        });
+    }, { concurrency: 10 });
 }
 
 /**
@@ -90,7 +79,7 @@ async function handle_folder_read(files, folder_path, context) {
           to load the entirety of the file list into a single
           object which can be heavy in some use-cases.
  */
-async function generateFileList(folder_path, options, callback) {
+async function generate_file_list(folder_path, options, callback) {
     const cwd = path.resolve();
 
     /* Our list is a dictionary where the key
@@ -116,6 +105,4 @@ async function generateFileList(folder_path, options, callback) {
     await handle_folder_read(files, root_folder_path, context);
 }
 
-module.exports = {
-    generateFileList
-}
+module.exports = generate_file_list;

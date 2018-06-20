@@ -2,5 +2,8 @@
     "name": "fl-generator",
     "license": "BSD-3-Clause",
     "version": "1.0.1",
-    "main": "generator.js"
+    "main": "generator.js",
+    "dependencies": {
+        "p-map": "1.2.0"
+    }
 }
