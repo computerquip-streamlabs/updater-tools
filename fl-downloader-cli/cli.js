@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-const downloader = require('fl-downloader');
+const download = require('fl-downloader');
 const args = require('minimist')(process.argv.slice(2));
 const path = require('path');
 const fs = require('fs');
-const util = require('util');
 
 function print_help() {
     const cwd = path.resolve();
@@ -23,4 +22,4 @@ const options = { ...args }
 const cwd = path.resolve();
 const file_list = JSON.parse(fs.readFileSync(path.resolve(cwd, args._[2])));
 
-downloader.downloadFiles(args._[0], args._[1], file_list, options);
+download(args._[0], args._[1], file_list, options);
