@@ -52,6 +52,4 @@ async function compress_files(input_folder, output_folder, file_list, options) {
     }
 }
 
-module.exports = {
-    compressFiles
-}
+module.exports = compress_files;
